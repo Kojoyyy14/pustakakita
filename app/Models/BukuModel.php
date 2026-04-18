@@ -9,11 +9,11 @@ class BukuModel extends Model
     protected $table      = 'buku';
     protected $primaryKey = 'id_buku';
 
-    // Kolom yang boleh diisi
-    protected $allowedFields = ['judul', 'kategori', 'stok'];
-
-    // Aktifkan ini supaya create_at & update_at terisi otomatis
-    protected $useTimestamps = true;
-    protected $createdField  = 'create_at'; 
-    protected $updatedField  = 'update_at';
+    // app/Models/BukuModel.php
+protected $allowedFields = [
+    'judul', 'penulis', 'penerbit', 'isbn', 
+    'tahun_terbit', 'ukuran_buku', 'halaman', 
+    'kategori', 'stok', 'cover'
+];
+    // ... (kode lainnya tetap biarkan saja)
 }

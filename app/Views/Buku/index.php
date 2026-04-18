@@ -41,7 +41,6 @@
             <?php 
             $list_kategori = ['Sains', 'Matematika', 'Sejarah', 'Sastra'];
             foreach ($list_kategori as $kat) : 
-                // Membuat URL dinamis yang menggabungkan kategori dan keyword
                 $url = base_url("buku?kategori=$kat" . ($keyword ? "&keyword=$keyword" : ""));
             ?>
                 <a href="<?= $url ?>" 
@@ -80,14 +79,33 @@
             <div class="col">
                 <div class="card h-100 border-0 shadow-sm hover-top transition">
                     <div class="position-relative p-3">
-                        <span class="badge bg-info position-absolute top-0 start-0 mt-4 ms-4 shadow-sm"><?= $b['kategori']; ?></span>
-                        <div class="bg-light rounded-3 d-flex align-items-center justify-content-center" style="height: 250px;">
-                            <i class="bi bi-book text-secondary display-1"></i>
+                        <span class="badge bg-info position-absolute top-0 start-0 mt-4 ms-4 shadow-sm" style="z-index: 5;"><?= $b['kategori']; ?></span>
+                        <div class="bg-light rounded-3 d-flex align-items-center justify-content-center overflow-hidden" style="height: 250px;">
+                            <?php if ($b['cover'] && $b['cover'] != 'default.jpg'): ?>
+                                <img src="<?= base_url('img/' . $b['cover']) ?>" class="img-fluid" style="max-height: 100%; width: auto; object-fit: contain;">
+                            <?php else: ?>
+                                <i class="bi bi-book text-secondary display-1"></i>
+                            <?php endif; ?>
                         </div>
                     </div>
                     <div class="card-body pt-0">
-                        <h6 class="fw-bold mb-1 text-truncate"><?= $b['judul']; ?></h6>
-                        <p class="text-muted small mb-3"><?= $b['penulis'] ?? 'Penulis Anonim'; ?></p>
+                        <h6 class="fw-bold mb-1 text-truncate" title="<?= $b['judul']; ?>"><?= $b['judul']; ?></h6>
+                        <p class="text-muted small mb-2 text-truncate"><?= $b['penulis'] ?? 'Penulis Anonim'; ?> | <?= $b['penerbit'] ?? '-'; ?></p>
+
+                        <div class="bg-light p-2 rounded-2 mb-3" style="font-size: 0.7rem; line-height: 1.4;">
+                            <div class="d-flex justify-content-between">
+                                <span class="text-muted">ISBN:</span> <span class="fw-bold"><?= $b['isbn'] ?: '-'; ?></span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span class="text-muted">Tahun:</span> <span class="fw-bold"><?= $b['tahun_terbit'] ?: '-'; ?></span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span class="text-muted">Ukuran:</span> <span class="fw-bold"><?= $b['ukuran_buku'] ?: '-'; ?></span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span class="text-muted">Halaman:</span> <span class="fw-bold"><?= $b['halaman'] ?: '0'; ?> hlm</span>
+                            </div>
+                        </div>
                         
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <div class="text-warning small">
@@ -117,10 +135,10 @@
                                 <?php 
                                     $db = \Config\Database::connect();
                                     $isPending = $db->table('peminjaman')
-                                        ->where('id_buku', $b['id_buku'])
-                                        ->where('id_user', session()->get('id_user'))
-                                        ->whereIn('status', ['pending', 'dipinjam'])
-                                        ->get()->getRow();
+                                         ->where('id_buku', $b['id_buku'])
+                                         ->where('id_user', session()->get('id_user'))
+                                         ->whereIn('status', ['pending', 'dipinjam'])
+                                         ->get()->getRow();
                                 ?>
 
                                 <?php if ($isPending) : ?>
