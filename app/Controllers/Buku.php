@@ -65,7 +65,7 @@ class Buku extends BaseController
                 'stok' => $buku['stok'] - 1
             ]);
 
-            return redirect()->to('/buku')->with('success', 'Berhasil mengajukan pinjaman, stok buku telah berkurang.');
+            return redirect()->to('/buku')->with('success', 'Berhasil mengajukan pinjaman');
         } else {
             return redirect()->back()->with('error', 'Maaf, stok buku sudah habis!');
         }

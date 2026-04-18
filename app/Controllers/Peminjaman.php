@@ -70,7 +70,8 @@ class Peminjaman extends BaseController
 
         return redirect()->to('/peminjaman')->with('success', $pesan);
     }
-public function tambah()
+
+    public function tambah()
     {
         // Jika Anda belum punya UserModel, buat dulu atau gunakan query manual
         $userModel = new \App\Models\UsersModel(); 
@@ -82,6 +83,7 @@ public function tambah()
         ];
         return view('peminjaman/tambah', $data);
     }
+
     public function proses_kembali($id)
     {
         if (session()->get('role') != 'admin') {
@@ -90,9 +92,13 @@ public function tambah()
 
         $dataPinjam = $this->peminjamanModel->find($id);
         
+        // Menangkap nilai denda dari input form (Jika kosong otomatis 0)
+        $denda = $this->request->getPost('denda') ?? 0;
+
         $this->peminjamanModel->update($id, [
             'tanggal_kembali' => date('Y-m-d H:i:s'),
-            'status'          => 'dikembalikan'
+            'status'          => 'dikembalikan',
+            'denda'           => $denda // Menyimpan nominal denda ke database
         ]);
 
         // Kembalikan stok buku
@@ -101,6 +107,6 @@ public function tambah()
             'stok' => $buku['stok'] + 1
         ]);
 
-        return redirect()->to('/peminjaman')->with('success', 'Buku telah dikembalikan.');
+        return redirect()->to('/peminjaman')->with('success', 'Buku telah dikembalikan. Denda dicatat: Rp' . number_format($denda));
     }
 }

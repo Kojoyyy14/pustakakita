@@ -62,3 +62,8 @@ $routes->get('users/print', 'Users::print', $allRole); // aksi print data user
 $routes->get('users/wa/(:num)', 'Users::wa/$1', $allRole); // aksi kirim ke whatsapp
 $routes->get('buku/ajukan/(:num)', 'Buku::ajukan/$1');
 $routes->get('peminjaman/konfirmasi/(:num)/(:any)', 'Peminjaman::konfirmasi/$1/$2');
+// Izinkan akses POST untuk proses pengembalian
+$routes->post('peminjaman/proses_kembali/(:num)', 'Peminjaman::proses_kembali/$1');
+
+// Opsional: tambahkan ini juga jika belum ada untuk fitur konfirmasi
+$routes->get('peminjaman/konfirmasi/(:num)/(:any)', 'Peminjaman::konfirmasi/$1/$2');
