@@ -37,7 +37,7 @@
             </a>
         </li>
 <li class="nav-item">
-    <a class="nav-link <?= (url_is('/laporan*')) ? 'active' : '' ?>" href="<?= base_url('laporan') ?>">
+    <a class="nav-link d-flex align-items-center py-2 px-3 <?= (url_is('/laporan*')) ? 'active shadow-sm text-white' : 'text-secondary' ?>" href="<?= base_url('laporan') ?>">
         <i class="bi bi-file-earmark-bar-graph me-3"></i> Laporan
     </a>
 </li>
@@ -47,6 +47,7 @@
                 <i class="bi bi-person-badge me-3 fs-5"></i> <span class="fw-semibold">Daftar Anggota</span>
             </a>
         </li>
+      
         <?php endif; ?>
 
         <li class="nav-item">

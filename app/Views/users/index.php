@@ -1,92 +1,161 @@
 <?= $this->extend('layouts/main') ?>
+
 <?= $this->section('content') ?>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-<div>
-
-    <h3>Data Users</h3>
-
-    <!-- FORM PENCARIAN & FILTER -->
-    <form method="get" action="">
-        <input type="text" name="keyword" placeholder="Cari nama..." value="<?= $_GET['keyword'] ?? '' ?>">
-
-        <select name="role">
-            <option value="">-- Semua Role --</option>
-            <option value="admin" <?= (($_GET['role'] ?? '') == 'admin') ? 'selected' : '' ?>>Admin</option>
-            <option value="petugas" <?= (($_GET['role'] ?? '') == 'petugas') ? 'selected' : '' ?>>Petugas</option>
-            <option value="anggota" <?= (($_GET['role'] ?? '') == 'anggota') ? 'selected' : '' ?>>Anggota</option>
-        </select>
-
-        <button type="submit">Cari</button>
-        <a href="<?= base_url('users') ?>">Reset</a>
-                <a href="<?= base_url('users/print?' . http_build_query($_GET)) ?>" target="_blank">
-            Print </a>
-                </form>
-
-    <br>
-
-    <?php if (session()->getFlashdata('success')): ?>
-        <div><?= session()->getFlashdata('success') ?></div>
-    <?php endif; ?>
-
-    <table border="1" cellpadding="5" cellspacing="0">
-        <thead>
-            <tr>
-                <th>No</th>
-                <th>Nama</th>
-                <th>Email</th>
-                <th>Username</th>
-                <th>Role</th>
-                <th>Foto</th>
-                <?php if (session()->get('role') == 'admin') : ?>
-                    <th>Aksi</th>
-                <?php endif; ?>
-            </tr>
-        </thead>
-
-        <tbody>
-            <?php if (!empty($users)): ?>
-                <?php $no = 1 + (10 * ($pager->getCurrentPage() - 1)); ?>
-                <?php foreach ($users as $u): ?>
-                    <tr>
-                        <td><?= $no++ ?></td>
-                        <td><?= $u['nama'] ?></td>
-                        <td><?= $u['email'] ?></td>
-                        <td><?= $u['username'] ?></td>
-                        <td><?= ucfirst($u['role']) ?></td>
-                        <td>
-                            <?php if ($u['foto']): ?>
-                                <img src="<?= base_url('uploads/users/' . $u['foto']) ?>" width="60">
-                            <?php else: ?>
-                                -
-                            <?php endif; ?>
-                        </td>
-
-                        <?php if (session()->get('role') == 'admin') : ?>
-                            <td>
-                                <a href="<?= base_url('users/detail/' . $u['id_user']) ?>">Detail</a>
-                                <a href="<?= base_url('users/edit/' . $u['id_user']) ?>">Edit</a>
-                                <a href="<?= base_url('users/wa/' . $u['id_user']) ?>" target="_blank">Kirim WA</a>
-                                <a href="<?= base_url('users/delete/' . $u['id_user']) ?>"
-                                    onclick="return confirm('Hapus user ini?')">Hapus</a>
-                            </td>
-                        <?php endif; ?>
-                    </tr>
-                <?php endforeach; ?>
-            <?php else: ?>
-                <tr>
-                    <td colspan="7">Belum ada data user</td>
-                </tr>
-            <?php endif; ?>
-        </tbody>
-    </table>
-
-    <br>
-
-    <!-- PAGINATION -->
-    <div>
-        <?= $pager->links() ?>
+<div class="container-fluid py-4" style="background-color: #f8f9fc; min-height: 100vh; font-family: 'Inter', sans-serif;">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold text-dark mb-1">Data Anggota</h3>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb smaller mb-0">
+                    <li class="breadcrumb-item"><a href="<?= base_url('dashboard') ?>" class="text-decoration-none">Dashboard</a></li>
+                    <li class="breadcrumb-item active">Manajemen Anggota</li>
+                </ol>
+            </nav>
+        </div>
+        <div class="d-flex gap-2">
+        <a href="<?= base_url('users/print') ?>" target="_blank" class="btn btn-outline-secondary shadow-sm rounded-pill px-3">
+            <i class="bi bi-printer me-1"></i> Print
+        </a>
+        <a href="<?= base_url('users/create') ?>" class="btn btn-primary shadow-sm rounded-pill px-4">
+            <i class="bi bi-person-plus-fill me-2"></i>Tambah Anggota
+        </a>
     </div>
-
 </div>
 
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-3">
+            <form action="" method="get" class="row g-3 align-items-center">
+                <div class="col-md-4">
+                    <div class="input-group border rounded-pill px-3 bg-light">
+                        <span class="input-group-text bg-transparent border-0 text-muted"><i class="bi bi-search"></i></span>
+                        <input type="text" name="cari" class="form-control bg-transparent border-0 small" placeholder="Cari nama atau username...">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select name="role" class="form-select border-0 bg-light rounded-pill small">
+                        <option value="">-- Semua Role --</option>
+                        <option value="admin">Admin</option>
+                        <option value="petugas">Petugas</option>
+                        <option value="anggota">Anggota</option>
+                    </select>
+                </div>
+                <div class="col-md-auto">
+                    <button type="submit" class="btn btn-dark rounded-pill px-4">Cari</button>
+                    <a href="<?= base_url('users') ?>" class="btn btn-link text-muted text-decoration-none small">Reset</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="table-responsive">
+            <table class="table align-middle mb-0 custom-table">
+                <thead>
+                    <tr>
+                        <th class="ps-4">PROFIL ANGGOTA</th>
+                        <th>KONTAK</th>
+                        <th>HAK AKSES</th>
+                        <th class="text-center">AKSI</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if (empty($users)) : ?>
+                        <tr><td colspan="4" class="text-center py-5 text-muted">Data anggota tidak ditemukan.</td></tr>
+                    <?php else : ?>
+                        <?php foreach ($users as $u) : ?>
+                        <tr>
+                            <td class="ps-4 py-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="position-relative">
+                                        <img src="<?= base_url('uploads/users/' . ($u['foto'] ?: 'default.jpg')) ?>" 
+                                             class="rounded-circle border border-2 border-white shadow-sm" 
+                                             style="width: 48px; height: 48px; object-fit: cover;">
+                                        <span class="position-absolute bottom-0 end-0 p-1 bg-success border border-white border-2 rounded-circle"></span>
+                                    </div>
+                                    <div class="ms-3">
+                                        <div class="fw-bold text-dark mb-0"><?= $u['nama'] ?></div>
+                                        <div class="smaller text-muted">@<?= $u['username'] ?></div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="smaller fw-medium text-dark"><?= $u['email'] ?: '-' ?></div>
+                                <a href="https://wa.me/<?= $u['no_hp'] ?>" target="_blank" class="text-success text-decoration-none smaller fw-bold">
+                                    <i class="bi bi-whatsapp me-1"></i> WhatsApp
+                                </a>
+                            </td>
+                            <td>
+                                <?php if (strtolower($u['role']) == 'admin') : ?>
+                                    <span class="badge-custom bg-danger-soft text-danger">Administrator</span>
+                                <?php elseif (strtolower($u['role']) == 'petugas') : ?>
+                                    <span class="badge-custom bg-warning-soft text-warning">Petugas</span>
+                                <?php else : ?>
+                                    <span class="badge-custom bg-primary-soft text-primary">Anggota</span>
+                                <?php endif; ?>
+                            </td>
+                            <td class="text-center">
+                                <div class="d-flex justify-content-center gap-2">
+                                    <a href="<?= base_url('users/edit/'.$u['id_user']) ?>" class="btn btn-sm btn-outline-warning rounded-pill px-3">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </a>
+                                    <a href="<?= base_url('users/delete/'.$u['id_user']) ?>" 
+                                       class="btn btn-sm btn-outline-danger rounded-pill px-3"
+                                       onclick="return confirm('Hapus anggota ini?')">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Custom Table Styling */
+    .custom-table thead th {
+        background-color: #fcfcfc;
+        color: #94a3b8;
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        padding: 1.25rem 1rem;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .custom-table tbody td {
+        border-bottom: 1px solid #f1f5f9;
+        color: #475569;
+    }
+
+    .smaller { font-size: 12px; }
+
+    /* Badge Khusus Role */
+    .badge-custom {
+        padding: 5px 14px;
+        border-radius: 8px;
+        font-size: 11px;
+        font-weight: 700;
+        display: inline-block;
+    }
+    
+    .bg-primary-soft { background-color: #eef2ff; }
+    .bg-danger-soft { background-color: #fff1f2; }
+    .bg-warning-soft { background-color: #fffbeb; }
+
+    /* Form & Input Reset */
+    .input-group-text { border: none; }
+    .form-control:focus { box-shadow: none; }
+    
+    .btn-outline-warning:hover, .btn-outline-danger:hover {
+        color: white;
+    }
+</style>
 <?= $this->endSection() ?>
