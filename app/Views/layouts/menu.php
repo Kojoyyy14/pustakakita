@@ -1,11 +1,11 @@
 <div class="d-flex flex-column h-100 p-3 bg-white border-end shadow-sm">
     <div class="mb-5 px-3">
-        <a class="navbar-brand d-flex align-items-center justify-content-center" href="<?= base_url('/') ?>" style="text-decoration: none;">
+        <a class="navbar-brand d-flex align-items-center justify-content-center" href="<?= base_url('dashboard') ?>" style="text-decoration: none;">
             <div class="p-2 bg-primary rounded-3 me-2">
                 <i class="bi bi-book-half text-white fs-5"></i>
             </div>
             <div>
-                <span class="fw-bold fs-5 text-dark" style="letter-spacing: -0.5px;">PustakaKita</span><span class="fw-light fs-5 text-primary"></span>
+                <span class="fw-bold fs-5 text-dark" style="letter-spacing: -0.5px;">PustakaKita</span>
             </div>
         </a>
     </div>
@@ -16,10 +16,8 @@
         </li>
         
         <li class="nav-item mb-2">
-            <a class="nav-link d-flex align-items-center py-2 px-3 <?= (uri_string() == '' || uri_string() == '/') ? 'active shadow-sm text-white' : 'text-secondary' ?>" href="<?= base_url('/') ?>">
-                <i class="bi bi-speedometer2 me-3 fs-5"></i> <span class="fw-semibold">Dashboard
-                
-                </span>
+            <a class="nav-link d-flex align-items-center py-2 px-3 <?= (uri_string() == 'dashboard' || uri_string() == '/') ? 'active shadow-sm text-white' : 'text-secondary' ?>" href="<?= base_url('dashboard') ?>">
+                <i class="bi bi-speedometer2 me-3 fs-5"></i> <span class="fw-semibold">Dashboard</span>
             </a>
         </li>
 
@@ -33,17 +31,19 @@
             </a>
         </li>
 
-      <li class="nav-item mb-2">
-    <a class="nav-link d-flex align-items-center py-2 px-3 <?= (strpos(uri_string(), 'peminjaman') !== false) ? 'active shadow-sm text-white' : 'text-secondary' ?>" href="<?= base_url('/peminjaman') ?>">
-        <i class="bi bi-arrow-left-right me-3 fs-5"></i> <span class="fw-semibold">Peminjaman</span>
-    </a>
-</li>
+        <li class="nav-item mb-2">
+            <a class="nav-link d-flex align-items-center py-2 px-3 <?= (strpos(uri_string(), 'peminjaman') !== false) ? 'active shadow-sm text-white' : 'text-secondary' ?>" href="<?= base_url('/peminjaman') ?>">
+                <i class="bi bi-arrow-left-right me-3 fs-5"></i> <span class="fw-semibold">Peminjaman</span>
+            </a>
+        </li>
 
+        <?php if (session()->get('role') == 'admin') : ?>
         <li class="nav-item mb-2">
             <a class="nav-link d-flex align-items-center py-2 px-3 <?= (strpos(uri_string(), 'users') !== false && strpos(uri_string(), 'edit') === false) ? 'active shadow-sm text-white' : 'text-secondary' ?>" href="<?= base_url('/users') ?>">
                 <i class="bi bi-person-badge me-3 fs-5"></i> <span class="fw-semibold">Daftar Anggota</span>
             </a>
         </li>
+        <?php endif; ?>
 
         <li class="nav-item">
             <small class="text-uppercase text-muted fw-bold px-3 mt-4 mb-2 d-block" style="font-size: 0.65rem; letter-spacing: 1px;">Sistem</small>

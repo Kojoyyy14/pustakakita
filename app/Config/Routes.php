@@ -21,7 +21,9 @@ $routes->get('/logout', 'Auth::logout');
 
 // Halaman utama
 $routes->get('/', 'Home::index', $authFilter);
-$routes->get('/dashboard', 'Home::index', $authFilter);
+// Buka app/Config/Routes.php
+$routes->get('/', 'Dashboard::index'); // Halaman utama saat pertama masuk
+$routes->get('dashboard', 'Dashboard::index'); // Saat menu dashboard diklik
 $routes->get('/users/create', 'Users::create');  // form tambah user
 $routes->post('/users/store', 'Users::store');   // aksi simpan user
 $routes->get('/users', 'Users::index', $allRole); // menampilkan data user
@@ -68,3 +70,7 @@ $routes->post('peminjaman/proses_kembali/(:num)', 'Peminjaman::proses_kembali/$1
 // Opsional: tambahkan ini juga jika belum ada untuk fitur konfirmasi
 $routes->get('peminjaman/konfirmasi/(:num)/(:any)', 'Peminjaman::konfirmasi/$1/$2');
 $routes->post('buku/ajukan/(:num)', 'Buku::ajukan/$1');
+$routes->get('dashboard', 'Dashboard::index');
+// Jika ingin dashboard jadi halaman utama setelah login:
+$routes->get('/', 'Dashboard::index');
+$routes->post('peminjaman/simpan_permohonan', 'Peminjaman::simpan_permohonan');

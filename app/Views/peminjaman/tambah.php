@@ -7,7 +7,8 @@
             <h5 class="fw-bold mb-0">Form Peminjaman Baru</h5>
         </div>
         <div class="card-body">
-            <form action="<?= base_url('peminjaman/simpan') ?>" method="post">
+            <form action="<?= base_url('peminjaman/simpan_permohonan') ?>" method="post">
+                
                 <div class="mb-3">
                     <label class="form-label">Pilih Siswa/Anggota</label>
                     <select name="id_user" class="form-select" required>
@@ -17,6 +18,7 @@
                         <?php endforeach; ?>
                     </select>
                 </div>
+
                 <div class="mb-3">
                     <label class="form-label">Pilih Buku</label>
                     <select name="id_buku" class="form-select" required>
@@ -26,9 +28,16 @@
                         <?php endforeach; ?>
                     </select>
                 </div>
+
+                <div class="mb-4">
+                    <label class="form-label">Batas Waktu Pengembalian</label>
+                    <input type="date" name="tanggal_kembali" class="form-control" required min="<?= date('Y-m-d') ?>">
+                    <small class="text-muted">Tentukan kapan buku harus dikembalikan.</small>
+                </div>
+
                 <div class="d-flex gap-2">
-                    <button type="submit" class="btn btn-primary">Simpan Pinjaman</button>
-                    <a href="<?= base_url('/') ?>" class="btn btn-light">Batal</a>
+                    <button type="submit" class="btn btn-primary px-4">Simpan Pinjaman</button>
+                    <a href="<?= base_url('dashboard') ?>" class="btn btn-light px-4">Batal</a>
                 </div>
             </form>
         </div>

@@ -83,6 +83,23 @@ class Peminjaman extends BaseController
         ];
         return view('peminjaman/tambah', $data);
     }
+   public function simpan_permohonan()
+{
+    // 1. CEK DATA FORM
+    $post = $this->request->getPost();
+    
+    // 2. CEK DATA SESSION
+    $sess = session()->get('id_user');
+
+    // 3. TAMPILKAN DAN BERHENTI (Ini akan muncul layar hitam/putih berisi data)
+    echo "<h3>HASIL DETEKSI:</h3>";
+    echo "ID dari Form: " . ($post['id_user'] ?? 'KOSONG') . "<br>";
+    echo "ID dari Session: " . ($sess ?? 'KOSONG') . "<br>";
+    echo "<hr>Semua Data yang Anda Kirim:<pre>";
+    print_r($post);
+    echo "</pre>";
+    die(); 
+}
 
     public function proses_kembali($id)
     {

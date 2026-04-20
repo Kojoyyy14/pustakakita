@@ -9,7 +9,7 @@
                     <h5 class="fw-bold mb-0">Form Tambah Buku</h5>
                 </div>
                 <div class="card-body p-4">
-                    <form action="<?= base_url('buku/simpan') ?>" method="post" enctype="multipart/form-data">
+                   <form action="<?= base_url('buku/simpan') ?>" method="post" enctype="multipart/form-data">
                         <?= csrf_field() ?>
 
                         <div class="mb-3 text-start">
