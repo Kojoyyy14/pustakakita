@@ -74,3 +74,5 @@ $routes->get('dashboard', 'Dashboard::index');
 // Jika ingin dashboard jadi halaman utama setelah login:
 $routes->get('/', 'Dashboard::index');
 $routes->post('peminjaman/simpan_permohonan', 'Peminjaman::simpan_permohonan');
+$routes->get('laporan', 'Laporan::index');
+$routes->get('laporan/filter', 'Laporan::filter');
