@@ -21,23 +21,23 @@ class Buku extends BaseController
         $keyword = $this->request->getGet('keyword');
         $kategori = $this->request->getGet('kategori');
 
-        // Inisialisasi model
-        $builder = $this->bukuModel;
+        // Menggunakan Query Builder untuk Join Rating
+        $builder = $this->bukuModel->builder();
+        $builder->select('buku.*, AVG(ulasan_buku.rating) as rata_rating, COUNT(ulasan_buku.id_ulasan) as total_ulasan');
+        $builder->join('ulasan_buku', 'ulasan_buku.id_buku = buku.id_buku', 'left');
+        $builder->groupBy('buku.id_buku');
 
-        // Logika Pencarian: jika ada keyword, cari berdasarkan judul
         if ($keyword) {
-            $builder = $builder->like('judul', $keyword);
+            $builder->like('buku.judul', $keyword);
         }
 
-        // Logika Kategori: jika ada kategori, filter berdasarkan kategori
         if ($kategori) {
-            $builder = $builder->where('kategori', $kategori);
+            $builder->where('buku.kategori', $kategori);
         }
 
         $data = [
             'title' => 'Katalog Buku',
-            // Ambil hasil akhir setelah filter search/kategori
-            'buku'  => $builder->findAll(),
+            'buku'  => $builder->get()->getResultArray(),
             'kategori_aktif' => $kategori,
             'keyword' => $keyword
         ];
@@ -45,31 +45,19 @@ class Buku extends BaseController
         return view('buku/index', $data);
     }
 
-   public function ajukan($id_buku)
-{
-    $buku = $this->bukuModel->find($id_buku);
+    public function detail($id)
+    {
+        $data = [
+            'title' => 'Detail Buku',
+            'buku'  => $this->bukuModel->find($id)
+        ];
 
-    if ($buku['stok'] > 0) {
-        // Ambil input durasi dari form
-        $durasiInput = $this->request->getPost('durasi_pinjam');
+        if (empty($data['buku'])) {
+            return redirect()->to('/buku')->with('error', 'Data buku tidak ditemukan.');
+        }
 
-        $this->peminjamanModel->save([
-            'id_user'           => session()->get('id_user'),
-            'id_buku'           => $id_buku,
-            'durasi'            => $durasiInput, // Simpan pesan durasi di sini
-            'tanggal_pengajuan' => date('Y-m-d H:i:s'),
-            'status'            => 'pending' 
-        ]);
-
-        $this->bukuModel->update($id_buku, [
-            'stok' => $buku['stok'] - 1
-        ]);
-
-        return redirect()->to('/buku')->with('success', 'Berhasil mengajukan pinjaman.');
-    } else {
-        return redirect()->back()->with('error', 'Maaf, stok buku sudah habis!');
+        return view('buku/detail', $data);
     }
-}
 
     public function tambah()
     {
@@ -81,9 +69,7 @@ class Buku extends BaseController
 
     public function simpan()
     {
-        // Baris dd() dihapus agar proses simpan ke database tidak terhenti
         $fileCover = $this->request->getFile('cover');
-
         if ($fileCover && $fileCover->getError() == 4) {
             $namaCover = 'default.jpg';
         } else {
@@ -107,26 +93,82 @@ class Buku extends BaseController
         return redirect()->to('/buku')->with('success', 'Buku berhasil disimpan.');
     }
 
-    public function pinjam($id_buku)
+    public function edit($id)
+    {
+        $data = [
+            'title' => 'Edit Data Buku',
+            'buku'  => $this->bukuModel->find($id)
+        ];
+        return view('buku/edit', $data);
+    }
+
+    public function update($id)
+    {
+        $fileCover = $this->request->getFile('cover');
+        $bukuLama = $this->bukuModel->find($id);
+
+        if ($fileCover->getError() == 4) {
+            $namaCover = $this->request->getPost('coverLama');
+        } else {
+            $namaCover = $fileCover->getRandomName();
+            $fileCover->move('img', $namaCover);
+            // Hapus file lama jika bukan default
+            if ($bukuLama['cover'] != 'default.jpg' && file_exists('img/' . $bukuLama['cover'])) {
+                unlink('img/' . $bukuLama['cover']);
+            }
+        }
+
+        $this->bukuModel->update($id, [
+            'judul'        => $this->request->getPost('judul'),
+            'penulis'      => $this->request->getPost('penulis'),
+            'penerbit'     => $this->request->getPost('penerbit'), 
+            'isbn'         => $this->request->getPost('isbn'),     
+            'tahun_terbit' => $this->request->getPost('tahun_terbit'), 
+            'ukuran_buku'  => $this->request->getPost('ukuran_buku'),   
+            'halaman'      => $this->request->getPost('halaman'),     
+            'kategori'     => $this->request->getPost('kategori'),
+            'stok'         => $this->request->getPost('stok'),
+            'cover'        => $namaCover
+        ]);
+
+        return redirect()->to('/buku')->with('success', 'Data buku berhasil diubah.');
+    }
+
+    public function hapus($id)
+    {
+        $buku = $this->bukuModel->find($id);
+        
+        // Hapus gambar dari folder img
+        if ($buku['cover'] != 'default.jpg' && file_exists('img/' . $buku['cover'])) {
+            unlink('img/' . $buku['cover']);
+        }
+
+        $this->bukuModel->delete($id);
+        return redirect()->to('/buku')->with('success', 'Buku berhasil dihapus.');
+    }
+
+    public function ajukan($id_buku)
     {
         $buku = $this->bukuModel->find($id_buku);
 
-        // Cek apakah stok masih ada
         if ($buku['stok'] > 0) {
-            // Simpan ke tabel peminjaman
+            $durasiInput = $this->request->getPost('durasi_pinjam');
+
             $this->peminjamanModel->save([
-                'id_user' => session('id_user'),
-                'id_buku' => $id_buku,
-                'tanggal_pinjam' => date('Y-m-d H:i:s'),
-                'status' => 'dipinjam'
+                'id_user'           => session()->get('id_user'),
+                'id_buku'           => $id_buku,
+                'durasi'            => $durasiInput,
+                'tanggal_pengajuan' => date('Y-m-d H:i:s'),
+                'status'            => 'pending' 
             ]);
 
-            // Kurangi stok buku
-            $this->bukuModel->update($id_buku, ['stok' => $buku['stok'] - 1]);
+            $this->bukuModel->update($id_buku, [
+                'stok' => $buku['stok'] - 1
+            ]);
 
-            return redirect()->to('/buku')->with('success', 'Buku berhasil dipinjam!');
+            return redirect()->to('/buku')->with('success', 'Berhasil mengajukan pinjaman.');
         } else {
-            return redirect()->to('/buku')->with('error', 'Maaf, stok buku habis.');
+            return redirect()->back()->with('error', 'Maaf, stok buku sudah habis!');
         }
     }
 }

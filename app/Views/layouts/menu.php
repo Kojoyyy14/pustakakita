@@ -61,7 +61,9 @@
             </a>
         </li>
     </ul>
-
+<?php if (session()->get('role') == 'admin') : ?>
+<a href="<?= base_url('/backup') ?>" class="btn btn-success">Backup Database</a>
+<?php endif; ?>
     <div class="mt-auto pt-4 border-top">
         <a href="<?= site_url('/logout') ?>" class="nav-link d-flex align-items-center py-2 px-3 text-danger mb-3 btn-logout fw-bold" onclick="return confirm('Log Out dari aplikasi?')">
             <i class="bi bi-power me-3 fs-5"></i> <span>Keluar</span>

@@ -6,73 +6,76 @@ use CodeIgniter\Router\RouteCollection;
  * @var RouteCollection $routes
  */
 
-// Variabel Filter
+// --- Variabel Filter & Role ---
 $authFilter = ['filter' => 'auth'];
+$admin      = ['filter' => 'role:admin'];
+$user       = ['filter' => 'role:user'];
+$allRole    = ['filter' => 'role:admin,user'];
 
-// Variabel Role
-$admin     = ['filter' => 'role:admin'];
-$user     = ['filter' => 'role:user'];
-$allRole   = ['filter' => 'role:admin, user'];
-
-// Login
+// --- Auth & System ---
 $routes->get('/login', 'Auth::login');
 $routes->post('/proses-login', 'Auth::prosesLogin');
 $routes->get('/logout', 'Auth::logout');
+$routes->get('/backup', 'Backup::index', $admin);
+$routes->get('/restore', 'Restore::index', $admin);
+$routes->post('/restore/auth', 'Restore::auth', $admin);
+$routes->get('/restore/form', 'Restore::form', $admin);
+$routes->post('/restore/process', 'Restore::process', $admin);
 
-// Halaman utama
-$routes->get('/', 'Home::index', $authFilter);
-// Buka app/Config/Routes.php
-$routes->get('/', 'Dashboard::index'); // Halaman utama saat pertama masuk
-$routes->get('dashboard', 'Dashboard::index'); // Saat menu dashboard diklik
-$routes->get('/users/create', 'Users::create');  // form tambah user
-$routes->post('/users/store', 'Users::store');   // aksi simpan user
-$routes->get('/users', 'Users::index', $allRole); // menampilkan data user
-$routes->get('/users/edit/(:num)', 'Users::edit/$1', $allRole); // form edit user
-$routes->post('/users/update/(:num)', 'Users::update/$1', $allRole); // aksi update user
-$routes->get('/users/delete/(:num)', 'Users::delete/$1', $allRole); // aksi hapus user
-// Menghubungkan URL /buku ke Controller Buku fungsi index
-$routes->get('buku', 'Buku::index');
-// Route untuk melihat daftar peminjaman
-$routes->get('peminjaman', 'Peminjaman::index');
+// --- Dashboard ---
+$routes->get('/', 'Dashboard::index', $authFilter);
+$routes->get('dashboard', 'Dashboard::index', $authFilter);
 
-// Route untuk formulir transaksi pinjam baru
-$routes->get('peminjaman/tambah', 'Peminjaman::tambah');
-$routes->post('peminjaman/simpan', 'Peminjaman::simpan');
-$routes->get('buku/tambah', 'Buku::tambah');
-$routes->post('buku/simpan', 'Buku::simpan'); // Untuk memproses data yang diinput
-$routes->post('buku/hapus/(:num)', 'Buku::hapus/$1');
-// Tambahkan baris ini untuk menangkap ID buku dari tombol "Pinjam Sekarang"
-$routes->get('peminjaman/proses/(:num)', 'Peminjaman::simpan/$1');
+// --- Manajemen Buku (Upgrade Fitur) ---
+$routes->group('buku', $authFilter, function($routes) {
+    $routes->get('/', 'Buku::index'); // Katalog Utama
+    
+    // Fitur khusus Admin
+    $routes->get('tambah', 'Buku::tambah', ['filter' => 'role:admin']);
+    $routes->post('simpan', 'Buku::simpan', ['filter' => 'role:admin']);
+    $routes->get('edit/(:num)', 'Buku::edit/$1', ['filter' => 'role:admin']); // Form Edit
+    $routes->post('update/(:num)', 'Buku::update/$1', ['filter' => 'role:admin']); // Proses Update
+    $routes->get('hapus/(:num)', 'Buku::hapus/$1', ['filter' => 'role:admin']); // Aksi Hapus via GET (agar simpel)
+    $routes->get('detail/(:num)', 'Buku::detail/$1'); // Detail Buku
+    
+    // Fitur Anggota (Rating & Pengajuan)
+    $routes->post('ajukan/(:num)', 'Buku::ajukan/$1', ['filter' => 'role:user']);
+});
 
-$routes->get('peminjaman', 'Peminjaman::index');
-$routes->get('peminjaman/tambah', 'Peminjaman::tambah');
-$routes->get('peminjaman/detail/(:num)', 'Peminjaman::detail/$1');
-$routes->get('buku/tambah', 'Buku::tambah');
-$routes->get('laporan', 'Laporan::index');
-$routes->get('pengembalian', 'Pengembalian::index');
-$routes->get('peminjaman/proses_kembali/(:num)', 'Peminjaman::proses_kembali/$1');
-// Gunakan session() untuk mengecek role di Routes
-if (session()->get('role') == 1) { 
-    $routes->get('users', 'Users::index');
-    // ... route admin lainnya ...
-}
-$routes->get('/users/edit/(:num)', 'Users::edit/$1', $allRole); // form edit user
-$routes->post('/users/update/(:num)', 'Users::update/$1', $allRole); // aksi update user
-$routes->get('/users/delete/(:num)', 'Users::delete/$1', $allRole); // aksi hapus user
-$routes->get('users/detail/(:num)', 'Users::detail/$1', $allRole); // aksi detail user
-$routes->get('users/print', 'Users::print', $allRole); // aksi print data user
-$routes->get('users/wa/(:num)', 'Users::wa/$1', $allRole); // aksi kirim ke whatsapp
-$routes->get('buku/ajukan/(:num)', 'Buku::ajukan/$1');
-$routes->get('peminjaman/konfirmasi/(:num)/(:any)', 'Peminjaman::konfirmasi/$1/$2');
-// Izinkan akses POST untuk proses pengembalian
-$routes->post('peminjaman/proses_kembali/(:num)', 'Peminjaman::proses_kembali/$1');
+// --- Manajemen Users / Anggota ---
+$routes->group('users', $allRole, function($routes) {
+    $routes->get('/', 'Users::index'); //
+    $routes->get('create', 'Users::create', ['filter' => 'role:admin']);
+    $routes->post('store', 'Users::store', ['filter' => 'role:admin']);
+    $routes->get('edit/(:num)', 'Users::edit/$1'); //
+    $routes->post('update/(:num)', 'Users::update/$1');
+    $routes->get('delete/(:num)', 'Users::delete/$1', ['filter' => 'role:admin']);
+    $routes->get('detail/(:num)', 'Users::detail/$1');
+    $routes->get('print', 'Users::print', ['filter' => 'role:admin']);
+    $routes->get('wa/(:num)', 'Users::wa/$1');
+});
 
-// Opsional: tambahkan ini juga jika belum ada untuk fitur konfirmasi
-$routes->get('peminjaman/konfirmasi/(:num)/(:any)', 'Peminjaman::konfirmasi/$1/$2');
-$routes->post('buku/ajukan/(:num)', 'Buku::ajukan/$1');
-$routes->get('dashboard', 'Dashboard::index');
-// Jika ingin dashboard jadi halaman utama setelah login:
-$routes->get('/', 'Dashboard::index');
-$routes->post('peminjaman/simpan_permohonan', 'Peminjaman::simpan_permohonan');
-$routes->get('laporan', 'Laporan::index');
-$routes->get('laporan/filter', 'Laporan::filter');
+// --- Transaksi Peminjaman & Pengembalian ---
+$routes->group('peminjaman', $authFilter, function($routes) {
+    $routes->get('/', 'Peminjaman::index');
+    $routes->get('tambah', 'Peminjaman::tambah');
+    $routes->post('simpan', 'Peminjaman::simpan');
+    $routes->post('simpan_permohonan', 'Peminjaman::simpan_permohonan');
+    $routes->get('detail/(:num)', 'Peminjaman::detail/$1');
+    $routes->get('konfirmasi/(:num)/(:any)', 'Peminjaman::konfirmasi/$1/$2', ['filter' => 'role:admin']);
+    
+    // Pengembalian
+    $routes->get('proses_kembali/(:num)', 'Peminjaman::proses_kembali/$1');
+    $routes->post('proses_kembali/(:num)', 'Peminjaman::proses_kembali/$1');
+});
+
+// --- Fitur Baru: Ulasan & Rating ---
+$routes->group('ulasan', $authFilter, function($routes) {
+    $routes->get('tambah/(:num)', 'Ulasan::tambah/$1'); // Form ulasan per id_buku
+    $routes->post('simpan', 'Ulasan::simpan'); // Aksi simpan ulasan
+});
+
+// --- Laporan ---
+$routes->get('laporan', 'Laporan::index', $admin);
+$routes->get('laporan/filter', 'Laporan::filter', $admin);
+$routes->get('pengembalian', 'Pengembalian::index', $admin);

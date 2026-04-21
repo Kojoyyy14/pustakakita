@@ -91,9 +91,15 @@
                         </div>
                         
                         <div class="d-flex justify-content-between align-items-center mb-3">
-                            <div class="text-warning small">
-                                <i class="bi bi-star-fill"></i> <i class="bi bi-star-fill"></i> <i class="bi bi-star-fill"></i> <i class="bi bi-star-fill"></i> <i class="bi bi-star-half"></i>
-                                <span class="text-muted ms-1">(4.8)</span>
+                            <div class="text-warning small d-flex align-items-center">
+                                <?php 
+                                    // Hitung bintang secara dinamis
+                                    $rating_angka = isset($b['rata_rating']) ? round($b['rata_rating']) : 0;
+                                    for($i=1; $i<=5; $i++):
+                                ?>
+                                    <i class="bi <?= ($i <= $rating_angka) ? 'bi-star-fill' : 'bi-star text-muted opacity-50' ?>"></i>
+                                <?php endfor; ?>
+                                <span class="text-muted ms-1" style="font-size: 0.75rem;">(<?= isset($b['rata_rating']) ? number_format($b['rata_rating'], 1) : '0'; ?>)</span>
                             </div>
                             <span class="badge bg-light text-success border border-success border-opacity-25">Stok: <?= $b['stok']; ?></span>
                         </div>
@@ -101,46 +107,61 @@
                         <div class="d-grid gap-2">
                             <?php if (session()->get('role') == 'admin') : ?>
                                 <div class="d-flex gap-1">
-                                    <a href="<?= base_url('buku/edit/' . $b['id_buku']) ?>" class="btn btn-sm btn-outline-warning flex-grow-1">
+                                    <a href="<?= base_url('buku/edit/' . $b['id_buku']) ?>" class="btn btn-sm btn-warning flex-grow-1 text-white fw-bold">
                                         <i class="bi bi-pencil-square"></i> Edit
                                     </a>
-                                    <a href="<?= base_url('buku/hapus/' . $b['id_buku']) ?>" class="btn btn-sm btn-outline-danger flex-grow-1" onclick="return confirm('Yakin?')"><i class="bi bi-trash"></i></a>
+                                    <a href="<?= base_url('buku/hapus/' . $b['id_buku']) ?>" class="btn btn-sm btn-danger px-3" onclick="return confirm('Apakah Anda yakin ingin menghapus buku ini?')">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
                                 </div>
+                                <a href="<?= base_url('buku/detail/' . $b['id_buku']) ?>" class="btn btn-sm btn-outline-primary border-2 fw-bold">
+                                    <i class="bi bi-info-circle"></i> Detail Buku
+                                </a>
                             <?php else : ?>
                                 <?php 
                                     $db = \Config\Database::connect();
                                     $isPending = $db->table('peminjaman')->where('id_buku', $b['id_buku'])->where('id_user', session()->get('id_user'))->whereIn('status', ['pending', 'dipinjam'])->get()->getRow();
+                                    
+                                    // Cek apakah user sudah pernah pinjam & kembali untuk kasih ulasan
+                                    $canReview = $db->table('peminjaman')->where('id_buku', $b['id_buku'])->where('id_user', session()->get('id_user'))->where('status', 'dikembalikan')->get()->getRow();
                                 ?>
+                                
                                 <?php if ($isPending) : ?>
-                                    <button class="btn btn-sm btn-warning disabled">
-                                        <i class="bi bi-clock-history me-1"></i> <?= ($isPending->status == 'pending') ? 'Menunggu' : 'Dipinjam'; ?>
+                                    <button class="btn btn-sm btn-warning disabled fw-bold">
+                                        <i class="bi bi-clock-history me-1"></i> <?= ($isPending->status == 'pending') ? 'Menunggu' : 'Sedang Dipinjam'; ?>
                                     </button>
                                 <?php elseif ($b['stok'] <= 0) : ?>
-                                    <button class="btn btn-sm btn-secondary disabled">Stok Habis</button>
+                                    <button class="btn btn-sm btn-secondary disabled fw-bold">Stok Habis</button>
                                 <?php else : ?>
-                                    <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#modalPinjam<?= $b['id_buku'] ?>">
+                                    <button type="button" class="btn btn-sm btn-primary fw-bold" data-bs-toggle="modal" data-bs-target="#modalPinjam<?= $b['id_buku'] ?>">
                                         <i class="bi bi-journal-plus me-1"></i> Pinjam Sekarang
                                     </button>
+                                <?php endif; ?>
+
+                                <?php if ($canReview) : ?>
+                                    <a href="<?= base_url('ulasan/tambah/' . $b['id_buku']) ?>" class="btn btn-sm btn-outline-info fw-bold">
+                                        <i class="bi bi-chat-left-text me-1"></i> Beri Ulasan
+                                    </a>
                                 <?php endif; ?>
                             <?php endif; ?>
                         </div>
                     </div>
                 </div>
 
-                <?php if (session()->get('role') != 'admin' && !$isPending && $b['stok'] > 0) : ?>
-                <div class="modal fade" id="modalPinjam<?= $b['id_buku'] ?>" tabindex="-1" aria-labelledby="label<?= $b['id_buku'] ?>" aria-hidden="true">
+                <?php if (session()->get('role') != 'admin' && isset($isPending) && !$isPending && $b['stok'] > 0) : ?>
+                <div class="modal fade" id="modalPinjam<?= $b['id_buku'] ?>" tabindex="-1" aria-hidden="true">
                     <div class="modal-dialog modal-dialog-centered modal-sm">
                         <div class="modal-content border-0 shadow">
                             <form action="<?= base_url('buku/ajukan/' . $b['id_buku']) ?>" method="post">
                                 <div class="modal-header border-0 pb-0">
-                                    <h6 class="modal-title fw-bold" id="label<?= $b['id_buku'] ?>">Konfirmasi Pinjam</h6>
+                                    <h6 class="modal-title fw-bold">Konfirmasi Pinjam</h6>
                                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                 </div>
                                 <div class="modal-body">
                                     <p class="small text-muted mb-3">Berapa lama ingin meminjam buku <strong>"<?= $b['judul'] ?>"</strong>?</p>
                                     <div class="mb-2">
                                         <label class="form-label small fw-bold">Rencana Durasi</label>
-                                        <input type="text" name="durasi_pinjam" class="form-control form-control-sm" placeholder="Contoh: 3 hari / 5 jam" required>
+                                        <input type="text" name="durasi_pinjam" class="form-control form-control-sm" placeholder="Contoh: 3 hari" required>
                                     </div>
                                 </div>
                                 <div class="modal-footer border-0 pt-0">
@@ -159,8 +180,11 @@
 </div>
 
 <style>
-    .hover-top { transition: transform 0.3s ease, box-shadow 0.3s ease; }
-    .hover-top:hover { transform: translateY(-8px); box-shadow: 0 1rem 3rem rgba(0,0,0,.1) !important; }
-    .btn-primary { background-color: #1a73e8; border-color: #1a73e8; }
+    .hover-top { transition: all 0.3s ease; }
+    .hover-top:hover { transform: translateY(-10px); box-shadow: 0 1rem 3rem rgba(0,0,0,.15) !important; }
+    .btn-primary { background-color: #2563eb; border-color: #2563eb; }
+    .bg-info { background-color: #0ea5e9 !important; }
+    .text-warning { color: #f59e0b !important; }
+    .transition { transition: all 0.3s ease-in-out; }
 </style>
 <?= $this->endSection() ?>
