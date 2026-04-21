@@ -36,18 +36,26 @@
                 <i class="bi bi-arrow-left-right me-3 fs-5"></i> <span class="fw-semibold">Peminjaman</span>
             </a>
         </li>
-<li class="nav-item">
-    <a class="nav-link d-flex align-items-center py-2 px-3 <?= (url_is('/laporan*')) ? 'active shadow-sm text-white' : 'text-secondary' ?>" href="<?= base_url('laporan') ?>">
-        <i class="bi bi-file-earmark-bar-graph me-3"></i> Laporan
-    </a>
-</li>
+
+        <?php if (session()->get('role') == 'user') : ?>
+        <li class="nav-item mb-2">
+            <a class="nav-link d-flex align-items-center py-2 px-3 <?= (uri_string() == 'favorite') ? 'active shadow-sm text-white' : 'text-secondary' ?>" href="<?= base_url('favorite') ?>">
+                <i class="bi bi-bookmark-star-fill me-3 fs-5"></i> <span class="fw-semibold">Buku Favorite</span>
+            </a>
+        </li>
+        <?php endif; ?>
+
         <?php if (session()->get('role') == 'admin') : ?>
+        <li class="nav-item mb-2">
+            <a class="nav-link d-flex align-items-center py-2 px-3 <?= (url_is('laporan*')) ? 'active shadow-sm text-white' : 'text-secondary' ?>" href="<?= base_url('laporan') ?>">
+                <i class="bi bi-file-earmark-bar-graph me-3 fs-5"></i> <span class="fw-semibold">Laporan</span>
+            </a>
+        </li>
         <li class="nav-item mb-2">
             <a class="nav-link d-flex align-items-center py-2 px-3 <?= (strpos(uri_string(), 'users') !== false && strpos(uri_string(), 'edit') === false) ? 'active shadow-sm text-white' : 'text-secondary' ?>" href="<?= base_url('/users') ?>">
                 <i class="bi bi-person-badge me-3 fs-5"></i> <span class="fw-semibold">Daftar Anggota</span>
             </a>
         </li>
-      
         <?php endif; ?>
 
         <li class="nav-item">
@@ -60,10 +68,16 @@
                 <i class="bi bi-sliders me-3 fs-5"></i> <span class="fw-semibold">Pengaturan</span>
             </a>
         </li>
+
+        <?php if (session()->get('role') == 'admin') : ?>
+        <li class="nav-item mt-2 px-3">
+            <a href="<?= base_url('/backup') ?>" class="btn btn-outline-success btn-sm w-100 fw-bold rounded-pill">
+                <i class="bi bi-database-down me-1"></i> Backup DB
+            </a>
+        </li>
+        <?php endif; ?>
     </ul>
-<?php if (session()->get('role') == 'admin') : ?>
-<a href="<?= base_url('/backup') ?>" class="btn btn-success">Backup Database</a>
-<?php endif; ?>
+
     <div class="mt-auto pt-4 border-top">
         <a href="<?= site_url('/logout') ?>" class="nav-link d-flex align-items-center py-2 px-3 text-danger mb-3 btn-logout fw-bold" onclick="return confirm('Log Out dari aplikasi?')">
             <i class="bi bi-power me-3 fs-5"></i> <span>Keluar</span>
@@ -83,7 +97,6 @@
 </div>
 
 <style>
-    /* Styling Hover & Active State Sidebar */
     .nav-pills .nav-link {
         border-radius: 12px;
         transition: all 0.3s ease;

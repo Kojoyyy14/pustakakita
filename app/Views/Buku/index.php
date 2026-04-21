@@ -51,8 +51,8 @@
     </div>
 
     <?php if (session()->getFlashdata('success')) : ?>
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <?= session()->getFlashdata('success'); ?>
+        <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i><?= session()->getFlashdata('success'); ?>
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     <?php endif; ?>
@@ -63,6 +63,16 @@
                 <div class="card h-100 border-0 shadow-sm hover-top transition">
                     <div class="position-relative p-3">
                         <span class="badge bg-info position-absolute top-0 start-0 mt-4 ms-4 shadow-sm" style="z-index: 5;"><?= $b['kategori']; ?></span>
+                        
+                        <?php if (session()->get('role') != 'admin') : ?>
+                            <a href="<?= base_url('favorite/tambah/' . $b['id_buku']) ?>" 
+                               class="btn btn-white btn-sm position-absolute top-0 end-0 mt-4 me-4 shadow-sm rounded-circle d-flex align-items-center justify-content-center favorit-btn" 
+                               style="z-index: 5; width: 35px; height: 35px;"
+                               title="Tambah ke Favorit">
+                                <i class="bi bi-heart-fill text-danger"></i>
+                            </a>
+                        <?php endif; ?>
+
                         <div class="bg-light rounded-3 d-flex align-items-center justify-content-center overflow-hidden" style="height: 250px;">
                             <?php if ($b['cover'] && $b['cover'] != 'default.jpg'): ?>
                                 <img src="<?= base_url('img/' . $b['cover']) ?>" class="img-fluid" style="max-height: 100%; width: auto; object-fit: contain;">
@@ -73,35 +83,27 @@
                     </div>
                     <div class="card-body pt-0">
                         <h6 class="fw-bold mb-1 text-truncate" title="<?= $b['judul']; ?>"><?= $b['judul']; ?></h6>
-                        <p class="text-muted small mb-2 text-truncate"><?= $b['penulis'] ?? 'Penulis Anonim'; ?> | <?= $b['penerbit'] ?? '-'; ?></p>
+                        <p class="text-muted small mb-2 text-truncate"><?= $b['penulis'] ?? 'Penulis Anonim'; ?></p>
 
                         <div class="bg-light p-2 rounded-2 mb-3" style="font-size: 0.7rem; line-height: 1.4;">
-                            <div class="d-flex justify-content-between">
-                                <span class="text-muted">ISBN:</span> <span class="fw-bold"><?= $b['isbn'] ?: '-'; ?></span>
-                            </div>
                             <div class="d-flex justify-content-between">
                                 <span class="text-muted">Tahun:</span> <span class="fw-bold"><?= $b['tahun_terbit'] ?: '-'; ?></span>
                             </div>
                             <div class="d-flex justify-content-between">
-                                <span class="text-muted">Ukuran:</span> <span class="fw-bold"><?= $b['ukuran_buku'] ?: '-'; ?></span>
-                            </div>
-                            <div class="d-flex justify-content-between">
-                                <span class="text-muted">Halaman:</span> <span class="fw-bold"><?= $b['halaman'] ?: '0'; ?> hlm</span>
+                                <span class="text-muted">Stok:</span> <span class="fw-bold <?= $b['stok'] <= 0 ? 'text-danger' : 'text-success' ?>"><?= $b['stok']; ?></span>
                             </div>
                         </div>
                         
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <div class="text-warning small d-flex align-items-center">
                                 <?php 
-                                    // Hitung bintang secara dinamis
                                     $rating_angka = isset($b['rata_rating']) ? round($b['rata_rating']) : 0;
                                     for($i=1; $i<=5; $i++):
                                 ?>
                                     <i class="bi <?= ($i <= $rating_angka) ? 'bi-star-fill' : 'bi-star text-muted opacity-50' ?>"></i>
                                 <?php endfor; ?>
-                                <span class="text-muted ms-1" style="font-size: 0.75rem;">(<?= isset($b['rata_rating']) ? number_format($b['rata_rating'], 1) : '0'; ?>)</span>
                             </div>
-                            <span class="badge bg-light text-success border border-success border-opacity-25">Stok: <?= $b['stok']; ?></span>
+                            <a href="<?= base_url('buku/detail/' . $b['id_buku']) ?>" class="text-primary small fw-bold text-decoration-none">Detail <i class="bi bi-chevron-right"></i></a>
                         </div>
 
                         <div class="d-grid gap-2">
@@ -110,63 +112,57 @@
                                     <a href="<?= base_url('buku/edit/' . $b['id_buku']) ?>" class="btn btn-sm btn-warning flex-grow-1 text-white fw-bold">
                                         <i class="bi bi-pencil-square"></i> Edit
                                     </a>
-                                    <a href="<?= base_url('buku/hapus/' . $b['id_buku']) ?>" class="btn btn-sm btn-danger px-3" onclick="return confirm('Apakah Anda yakin ingin menghapus buku ini?')">
+                                    <a href="<?= base_url('buku/hapus/' . $b['id_buku']) ?>" class="btn btn-sm btn-danger px-3" onclick="return confirm('Hapus buku ini?')">
                                         <i class="bi bi-trash"></i>
                                     </a>
                                 </div>
-                                <a href="<?= base_url('buku/detail/' . $b['id_buku']) ?>" class="btn btn-sm btn-outline-primary border-2 fw-bold">
-                                    <i class="bi bi-info-circle"></i> Detail Buku
-                                </a>
                             <?php else : ?>
                                 <?php 
                                     $db = \Config\Database::connect();
-                                    $isPending = $db->table('peminjaman')->where('id_buku', $b['id_buku'])->where('id_user', session()->get('id_user'))->whereIn('status', ['pending', 'dipinjam'])->get()->getRow();
-                                    
-                                    // Cek apakah user sudah pernah pinjam & kembali untuk kasih ulasan
-                                    $canReview = $db->table('peminjaman')->where('id_buku', $b['id_buku'])->where('id_user', session()->get('id_user'))->where('status', 'dikembalikan')->get()->getRow();
+                                    $peminjaman = $db->table('peminjaman')
+                                        ->where('id_buku', $b['id_buku'])
+                                        ->where('id_user', session()->get('id_user'))
+                                        ->whereIn('status', ['pending', 'dipinjam'])
+                                        ->get()->getRow();
                                 ?>
                                 
-                                <?php if ($isPending) : ?>
-                                    <button class="btn btn-sm btn-warning disabled fw-bold">
-                                        <i class="bi bi-clock-history me-1"></i> <?= ($isPending->status == 'pending') ? 'Menunggu' : 'Sedang Dipinjam'; ?>
+                                <?php if ($peminjaman) : ?>
+                                    <button class="btn btn-sm btn-warning disabled fw-bold shadow-sm">
+                                        <i class="bi bi-clock-history me-1"></i> <?= ($peminjaman->status == 'pending') ? 'Menunggu' : 'Dipinjam'; ?>
                                     </button>
                                 <?php elseif ($b['stok'] <= 0) : ?>
                                     <button class="btn btn-sm btn-secondary disabled fw-bold">Stok Habis</button>
                                 <?php else : ?>
-                                    <button type="button" class="btn btn-sm btn-primary fw-bold" data-bs-toggle="modal" data-bs-target="#modalPinjam<?= $b['id_buku'] ?>">
-                                        <i class="bi bi-journal-plus me-1"></i> Pinjam Sekarang
+                                    <button type="button" class="btn btn-sm btn-primary fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#modalPinjam<?= $b['id_buku'] ?>">
+                                        <i class="bi bi-journal-plus me-1"></i> Pinjam Buku
                                     </button>
-                                <?php endif; ?>
-
-                                <?php if ($canReview) : ?>
-                                    <a href="<?= base_url('ulasan/tambah/' . $b['id_buku']) ?>" class="btn btn-sm btn-outline-info fw-bold">
-                                        <i class="bi bi-chat-left-text me-1"></i> Beri Ulasan
-                                    </a>
                                 <?php endif; ?>
                             <?php endif; ?>
                         </div>
                     </div>
                 </div>
 
-                <?php if (session()->get('role') != 'admin' && isset($isPending) && !$isPending && $b['stok'] > 0) : ?>
+                <?php if (session()->get('role') != 'admin' && $b['stok'] > 0) : ?>
                 <div class="modal fade" id="modalPinjam<?= $b['id_buku'] ?>" tabindex="-1" aria-hidden="true">
                     <div class="modal-dialog modal-dialog-centered modal-sm">
                         <div class="modal-content border-0 shadow">
-                            <form action="<?= base_url('buku/ajukan/' . $b['id_buku']) ?>" method="post">
+                            <form action="<?= base_url('peminjaman/simpan') ?>" method="post">
+                                <?= csrf_field() ?>
+                                <input type="hidden" name="id_buku" value="<?= $b['id_buku'] ?>">
                                 <div class="modal-header border-0 pb-0">
                                     <h6 class="modal-title fw-bold">Konfirmasi Pinjam</h6>
                                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                 </div>
                                 <div class="modal-body">
-                                    <p class="small text-muted mb-3">Berapa lama ingin meminjam buku <strong>"<?= $b['judul'] ?>"</strong>?</p>
+                                    <p class="small text-muted mb-3">Mau pinjam <strong>"<?= $b['judul'] ?>"</strong> berapa lama?</p>
                                     <div class="mb-2">
-                                        <label class="form-label small fw-bold">Rencana Durasi</label>
-                                        <input type="text" name="durasi_pinjam" class="form-control form-control-sm" placeholder="Contoh: 3 hari" required>
+                                        <label class="form-label small fw-bold">Durasi (Hari)</label>
+                                        <input type="number" name="durasi_pinjam" class="form-control form-control-sm" placeholder="Contoh: 7" required min="1">
                                     </div>
                                 </div>
                                 <div class="modal-footer border-0 pt-0">
                                     <button type="button" class="btn btn-sm btn-light" data-bs-dismiss="modal">Batal</button>
-                                    <button type="submit" class="btn btn-sm btn-primary">Kirim Permohonan</button>
+                                    <button type="submit" class="btn btn-sm btn-primary px-3">Pinjam</button>
                                 </div>
                             </form>
                         </div>
@@ -183,8 +179,20 @@
     .hover-top { transition: all 0.3s ease; }
     .hover-top:hover { transform: translateY(-10px); box-shadow: 0 1rem 3rem rgba(0,0,0,.15) !important; }
     .btn-primary { background-color: #2563eb; border-color: #2563eb; }
-    .bg-info { background-color: #0ea5e9 !important; }
-    .text-warning { color: #f59e0b !important; }
     .transition { transition: all 0.3s ease-in-out; }
+    
+    /* Style khusus tombol favorit */
+    .btn-white { 
+        background-color: white; 
+        border: 1px solid #f0f0f0;
+    }
+    .favorit-btn {
+        transition: all 0.2s ease;
+    }
+    .favorit-btn:hover {
+        transform: scale(1.15);
+        background-color: #fff5f5;
+        border-color: #ffc1c1;
+    }
 </style>
 <?= $this->endSection() ?>

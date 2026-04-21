@@ -25,7 +25,7 @@ class Dashboard extends BaseController
                      ->countAllResults();
 
     // 4. Ambil Peminjaman yang akan segera berakhir
-    $deadlineAlert = date('Y-m-d', strtotime('+3 days'));
+    $deadlineAlert = date('Y-m-d', strtotime('+3 hours'));
 
     $aktivitasMendesak = $db->table('peminjaman')
         // PERBAIKAN: Tambahkan users.kelas di select agar tidak Undefined Index

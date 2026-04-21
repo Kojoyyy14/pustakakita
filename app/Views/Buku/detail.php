@@ -35,7 +35,7 @@
 
                     <hr class="my-4">
 
-                    <div class="row g-4">
+                    <div class="row g-4 text-break">
                         <div class="col-sm-6">
                             <label class="text-muted small d-block">Penerbit</label>
                             <p class="fw-bold"><?= $buku['penerbit'] ?: '-'; ?></p>
@@ -74,6 +74,49 @@
                 </div>
             </div>
         </div>
+    </div>
+
+    <div class="mt-5 px-3">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4 class="fw-bold m-0"><i class="bi bi-star-fill text-warning me-2"></i>Ulasan Pengguna</h4>
+            <?php if (session()->get('role') == 'user') : ?>
+                <a href="<?= base_url('ulasan/tambah/' . $buku['id_buku']) ?>" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                    Beri Ulasan
+                </a>
+            <?php endif; ?>
+        </div>
+        
+        <?php if (empty($ulasan)) : ?>
+            <div class="text-center py-5 bg-white rounded shadow-sm border">
+                <i class="bi bi-chat-left-dots text-muted display-4 mb-3 d-block"></i>
+                <p class="text-muted">Belum ada ulasan untuk buku ini. Jadilah yang pertama memberikan ulasan!</p>
+            </div>
+        <?php else : ?>
+            <div class="row row-cols-1 row-cols-md-2 g-3">
+                <?php foreach ($ulasan as $u) : ?>
+                    <div class="col">
+                        <div class="card h-100 border-0 shadow-sm">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <h6 class="fw-bold mb-0 text-primary"><?= $u['nama_user']; ?></h6>
+                                    <small class="text-muted small"><?= date('d/m/Y', strtotime($u['tanggal_ulasan'])); ?></small>
+                                </div>
+                                
+                                <div class="mb-2">
+                                    <?php for ($i = 1; $i <= 5; $i++) : ?>
+                                        <i class="bi <?= $i <= $u['rating'] ? 'bi-star-fill text-warning' : 'bi-star text-secondary'; ?> small"></i>
+                                    <?php endfor; ?>
+                                </div>
+                                
+                                <p class="card-text text-dark small mb-0">
+                                    "<?= htmlspecialchars($u['ulasan']); ?>"
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
     </div>
 </div>
 <?= $this->endSection() ?>

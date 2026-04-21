@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Models\BukuModel;
 use App\Models\PeminjamanModel;
+use App\Models\UlasanModel;
 
 class Buku extends BaseController
 {
@@ -45,19 +46,29 @@ class Buku extends BaseController
         return view('buku/index', $data);
     }
 
-    public function detail($id)
-    {
-        $data = [
-            'title' => 'Detail Buku',
-            'buku'  => $this->bukuModel->find($id)
-        ];
+    // Tambahkan use model di bagian atas
 
-        if (empty($data['buku'])) {
-            return redirect()->to('/buku')->with('error', 'Data buku tidak ditemukan.');
-        }
+public function detail($id)
+{
+    $ulasanModel = new UlasanModel();
+    
+    $data = [
+        'title'  => 'Detail Buku',
+        'buku'   => $this->bukuModel->find($id),
+        // Ambil ulasan beserta nama user yang memberi ulasan
+        'ulasan' => $ulasanModel->select('ulasan_buku.*, users.nama as nama_user')
+                                ->join('users', 'users.id_user = ulasan_buku.id_user')
+                                ->where('id_buku', $id)
+                                ->orderBy('tanggal_ulasan', 'DESC')
+                                ->findAll()
+    ];
 
-        return view('buku/detail', $data);
+    if (empty($data['buku'])) {
+        return redirect()->to('/buku')->with('error', 'Data buku tidak ditemukan.');
     }
+
+    return view('buku/detail', $data);
+} 
 
     public function tambah()
     {
